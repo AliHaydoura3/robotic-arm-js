@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Servo Control</title>
+</head>
+<body>
+
+<h1>Servo Controller</h1>
+
+<input
+  type="range"
+  min="0"
+  max="180"
+  value="90"
+  id="slider"
+/>
+
+<h2 id="angle">90</h2>
+
+<script>
+
+const socket =
+  new WebSocket("wss://your-app.onrender.com");
+
+const slider =
+  document.getElementById("slider");
+
+const angle =
+  document.getElementById("angle");
+
+slider.addEventListener("input", () => {
+
+    angle.innerText = slider.value;
+
+    if (socket.readyState === WebSocket.OPEN) {
+
+        socket.send(slider.value);
+    }
+});
+
+</script>
+
+</body>
+</html>
