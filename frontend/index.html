@@ -28,13 +28,17 @@ const slider =
 const angle =
   document.getElementById("angle");
 
+const throttleInterval = 100;
+let lastSendTime = 0;
+
 slider.addEventListener("input", () => {
 
     angle.innerText = slider.value;
 
-    if (socket.readyState === WebSocket.OPEN) {
-
+    const now = Date.now();
+    if (now - lastSendTime >= throttleInterval && socket.readyState === WebSocket.OPEN) {
         socket.send(slider.value);
+        lastSendTime = now;
     }
 });
 
