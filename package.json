@@ -1,12 +1,13 @@
 {
   "name": "servo-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Professional 6-Motor Robotic Arm Controller",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": [],
+  "keywords": ["robotic-arm", "servo", "websocket"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -14,3 +15,4 @@
     "ws": "^8.21.0"
   }
 }
+

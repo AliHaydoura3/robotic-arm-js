@@ -1,48 +1,506 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Servo Control</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotic Arm Controller</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .container-main {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background-color: #198754;
+        }
+
+        .status-dot.disconnected {
+            background-color: #dc3545;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .motors-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .motor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .motor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+            border-color: var(--primary-color);
+        }
+
+        .motor-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .motor-icon {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            width: 50px;
+            height: 50px;
+            background: rgba(13, 110, 253, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .motor-title {
+            flex: 1;
+        }
+
+        .motor-title h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #333;
+        }
+
+        .motor-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .angle-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .angle-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .angle-unit {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: -5px;
+        }
+
+        .slider-container {
+            margin: 25px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .motor-info {
+            background: rgba(13, 110, 253, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 1024px) {
+            .motors-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .motors-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container-main">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> Robotic Arm Controller</h1>
+            <p>Professional 6-Motor Servo Control System</p>
+        </div>
 
-<h1>Servo Controller</h1>
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span class="status-dot connected" id="statusDot"></span>
+                <span id="connectionStatus">Connected</span>
+            </div>
+            <div id="motorStatus" style="font-size: 0.9rem; color: #666;">Waiting for input...</div>
+        </div>
 
-<input
-  type="range"
-  min="0"
-  max="180"
-  value="90"
-  id="slider"
-/>
+        <div class="motors-grid">
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 1</h3>
+                        <div class="motor-label">Shoulder</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle1">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor1">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
 
-<h2 id="angle">90</h2>
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 2</h3>
+                        <div class="motor-label">Upper Arm</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle2">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor2">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
 
-<script>
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 3</h3>
+                        <div class="motor-label">Elbow</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle3">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor3">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
 
-const socket =
-  new WebSocket("wss://robotic-arm-ws-a7adg0debudta0bp.italynorth-01.azurewebsites.net");
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 4</h3>
+                        <div class="motor-label">Wrist Pitch</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle4">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor4">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
 
-const slider =
-  document.getElementById("slider");
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 5</h3>
+                        <div class="motor-label">Wrist Roll</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle5">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor5">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
 
-const angle =
-  document.getElementById("angle");
+            <div class="motor-card">
+                <div class="motor-header">
+                    <div class="motor-icon"><i class="fas fa-cog"></i></div>
+                    <div class="motor-title">
+                        <h3>Motor 6</h3>
+                        <div class="motor-label">Gripper</div>
+                    </div>
+                </div>
+                <div class="angle-display">
+                    <div class="angle-value" id="angle6">90</div>
+                    <div class="angle-unit">degrees</div>
+                </div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="180" value="90" class="slider" id="motor6">
+                    <div class="slider-labels">
+                        <span>0°</span>
+                        <span>180°</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-const throttleInterval = 100;
-let lastSendTime = 0;
+        <div class="footer">
+            <p><i class="fas fa-info-circle"></i> Real-time 6-Motor Control System • Throttle: 100ms</p>
+        </div>
+    </div>
 
-slider.addEventListener("input", () => {
+    <script>
+        const THROTTLE_INTERVAL = 100;
+        let lastSendTime = {};
+        let socket = null;
 
-    angle.innerText = slider.value;
+        // Initialize throttle times for each motor
+        for (let i = 1; i <= 6; i++) {
+            lastSendTime[i] = 0;
+        }
 
-    const now = Date.now();
-    if (now - lastSendTime >= throttleInterval && socket.readyState === WebSocket.OPEN) {
-        socket.send(slider.value);
-        lastSendTime = now;
-    }
-});
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsURL = `${protocol}//${window.location.host}`;
+            
+            socket = new WebSocket(wsURL);
 
-</script>
+            socket.onopen = () => {
+                console.log('Connected to server');
+                updateConnectionStatus(true);
+            };
 
+            socket.onclose = () => {
+                console.log('Disconnected from server');
+                updateConnectionStatus(false);
+                setTimeout(initWebSocket, 3000);
+            };
+
+            socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus(false);
+            };
+
+            socket.onmessage = (event) => {
+                console.log('Message from server:', event.data);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('connectionStatus');
+            
+            if (connected) {
+                statusDot.classList.remove('disconnected');
+                statusDot.classList.add('connected');
+                statusText.textContent = '✓ Connected';
+                statusText.style.color = '#198754';
+            } else {
+                statusDot.classList.remove('connected');
+                statusDot.classList.add('disconnected');
+                statusText.textContent = '✗ Disconnected';
+                statusText.style.color = '#dc3545';
+            }
+        }
+
+        function sendMotorCommand(motorId, angle) {
+            const now = Date.now();
+            
+            // Throttle: only send if enough time has passed
+            if (now - lastSendTime[motorId] >= THROTTLE_INTERVAL && socket && socket.readyState === WebSocket.OPEN) {
+                const command = JSON.stringify({ motorId, angle: parseInt(angle) });
+                socket.send(command);
+                lastSendTime[motorId] = now;
+                
+                // Update status
+                document.getElementById('motorStatus').textContent = `Motor ${motorId}: ${angle}°`;
+                console.log(`Sent: ${command}`);
+            }
+        }
+
+        function setMotorAngle(motorId, angle) {
+            const slider = document.getElementById(`motor${motorId}`);
+            const angleDisplay = document.getElementById(`angle${motorId}`);
+            
+            slider.value = angle;
+            angleDisplay.textContent = angle;
+            sendMotorCommand(motorId, angle);
+        }
+
+        // Setup event listeners for all motor sliders
+        for (let i = 1; i <= 6; i++) {
+            const slider = document.getElementById(`motor${i}`);
+            const angleDisplay = document.getElementById(`angle${i}`);
+
+            slider.addEventListener('input', function() {
+                const angle = this.value;
+                angleDisplay.textContent = angle;
+                sendMotorCommand(i, angle);
+            });
+        }
+
+        // Initialize WebSocket connection
+        initWebSocket();
+    </script>
 </body>
 </html>
